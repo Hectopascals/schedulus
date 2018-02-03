@@ -1,0 +1,23 @@
+{
+  "name": "schedulus",
+  "version": "1.0.0",
+  "description": "A Chat Bot that helps organizations post and update their Employee Schedules on a weekly basis.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/hirthanan/schedulus.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hirthanan/schedulus/issues"
+  },
+  "homepage": "https://github.com/hirthanan/schedulus#readme",
+  "dependencies": {
+    "express": "^4.16.2"
+  }
+}
