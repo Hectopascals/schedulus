@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/hirthanan/schedulus#readme",
   "dependencies": {
+    "ciscospark": "^1.25.3",
     "express": "^4.16.2"
   }
 }
