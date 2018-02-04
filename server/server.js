@@ -38,9 +38,9 @@ ref.once('value')
     .then(function (snap) {
         console.log('snap.val() ', snap.val());
     })
-    .catch(error) => {
+    .catch((error) => {
       console.log(".ONCE FAILED:", error);
-    };
+    });
 
 
 // initialize application -- begin
