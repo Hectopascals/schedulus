@@ -200,11 +200,13 @@ function main() {
                     forward(post, response);
                 });
             }
-            else if (comment.indexOf("-info") !== -1) {
-
+            else if (comment.indexOf("info") !== -1 || comment.indexOf("hi") !== -1 || comment.indexOf("hello") !== -1) {
+                post["markdown"] = "Hi there! Type: \n * '@Schedulus -schedule' For the all employee schedule \n * '@Schedulus Firstname-schedule' For your own schedule \n * '@Schedulus Firstname-Weekday-away' To drop your shift on that day \n * '@Schedulus Firstname-Weekday-(hh:mm-hh:mm)-take' To take that shift";
+                forward(post, response);
             }
             else {
                 post["markdown"] = "INVALID COMMAND";
+                forward(post, response);
             }
         }).catch((e) => {
             response.sendStatus(503); // if getting message details fails, respond with 503
