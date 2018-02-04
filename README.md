@@ -1,6 +1,6 @@
 # Schedulus
 
-A Chat Bot that helps organizations post and update their Employee Schedules on a weekly basis.
+A Chat Bot on Cisco Spark that helps organizations check, post, and update their Employee Schedules on a weekly basis.
 
 This App is built using Cisco Spark's API, NodeJS, Express, and Firebase. Hosted on AWS EC2.
 
