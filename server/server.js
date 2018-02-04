@@ -55,6 +55,59 @@ function setSchedule(name, day, time, callback) {
     })
 }
 
+function setFullWeek(name, callback) {
+    console.log("reached setFullWeek");
+    // deletes previous weeks employee schedules
+    firebase.database().ref('/Employees/' + name).update({
+        "Sunday": "9:00-17:00",
+        "Monday": "9:00-17:00",
+        "Tueday": "9:00-17:00",
+        "Wednesday": "9:00-17:00",
+        "Thursday": "9:00-17:00",
+        "Friday": "9:00-17:00",
+        "Saturday": "9:00-17:00"
+    }, function (err, res) {
+        if (err) {
+            console.error("failed to upload full week schedule");
+        }
+        else {
+            callback(null, res);
+        }
+    })
+}
+
+function setNewWeek(callback) {
+    // deletes previous weeks employee schedules
+    firebase.database().ref('/Employees/').update({ }, function (err, res) {
+        if (err) {
+            console.error("failed to delete previous schedule");
+        }
+        else {
+            callback(null, res);
+        }
+    })
+}
+
+function addEmployee(name, callback) {
+
+    firebase.database().ref('/Employees/' + name).update({
+        "Sunday": "OFF",
+        "Monday": "OFF",
+        "Tueday": "OFF",
+        "Wednesday": "OFF",
+        "Thursday": "OFF",
+        "Friday": "OFF",
+        "Saturday": "OFF"
+    }, function (err, res) {
+        if (err) {
+            console.error("failed to update schedule");
+        }
+        else {
+            callback(null, res);
+        }
+    })
+}
+
 
 // initialize application -- begin
 let webApp = EXPRESS(); // construct the web webserver
@@ -120,7 +173,7 @@ function extractFstName(comment) {
 }
 
 function capitalizeFirstLetter(string) {
-    console.log("STRING = "+ string);
+    console.log("STRING = " + string);
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
@@ -140,7 +193,7 @@ function main() {
 
             if (comment.indexOf("-schedule") !== -1) {
                 var fstName = extractFstName(comment);
-                    getSchedule(1, fstName, function (err, res) {
+                getSchedule(1, fstName, function (err, res) {
                     post["markdown"] = res;
                     forward(post, response);
                 });
@@ -170,7 +223,7 @@ function main() {
             else if (comment.indexOf("-take") !== -1) {
                 var data = comment.replace(/-/g, " ");
                 data = data.split(' ')
-                
+
                 var fstName = capitalizeFirstLetter(data[1]);
                 var day = capitalizeFirstLetter(data[2]);
 
@@ -178,7 +231,7 @@ function main() {
                 var end_time = data[4];
 
                 var time = start_time + "-" + end_time;
-                
+
                 setSchedule(fstName, day, time, function (err, res) {
                     post["markdown"] = "take this shift";
                     forward(post, response);
@@ -203,6 +256,18 @@ function main() {
             else if (comment.indexOf("info") !== -1 || comment.indexOf("hi") !== -1 || comment.indexOf("hello") !== -1) {
                 post["markdown"] = "Hi there! Type: \n * '@Schedulus -schedule' For the all employee schedule \n * '@Schedulus Firstname-schedule' For your own schedule \n * '@Schedulus Firstname-Weekday-away' To drop your shift on that day \n * '@Schedulus Firstname-Weekday-(hh:mm-hh:mm)-take' To take that shift";
                 forward(post, response);
+            }
+            else if (comment.indexOf("-add") !== -1) {
+                var data = comment.replace(/-/g, " ");
+                data = data.split(' ');
+
+                var fstName = capitalizeFirstLetter(data[1]);
+
+                console.log("FSTNAME " + fstName);
+                addEmployee(fstName, function (err, res) {
+                    post["markdown"] = "Added " + fstName + " to the Employee list";
+                    forward(post, response);
+                })
             }
             else {
                 post["markdown"] = "INVALID COMMAND";
@@ -241,7 +306,7 @@ process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
 
 // exit handler -- end
 
-function getKeys (json) {
+function getKeys(json) {
     var keys = []
     for (k in json) {
         keys.push(k);
