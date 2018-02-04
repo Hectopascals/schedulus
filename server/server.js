@@ -30,13 +30,17 @@ firebase.initializeApp({
 
 var ref = firebase.app().database().ref('/Employees');
 
-ref.once('value')
-    .then(function (snap) {
-        parseSchedule(snap.val(), 0, 'Jane');
-    })
-    .catch((error) => {
-      console.log(".ONCE FAILED:", error);
-    });
+function getSchedule(i, name, callback) {
+    ref.once('value')
+        .then(function (snap) {
+            var data = parseSchedule(snap.val(), i, name);
+            callback(null, data);
+        })
+        .catch((error) => {
+            console.log(".ONCE FAILED:", error);
+            callback('error', null);
+        });
+}
 
 
 // initialize application -- begin
@@ -85,63 +89,71 @@ function stopBot() {
     });
 }
 
+function forward(post, response) {
+    // send the message back
+    sparkBot.messages.create(post).then((r) => {
+        response.sendStatus(200); // respond with 200 to api.ciscospark.com
+    }).catch((e) => {
+        response.sendStatus(503); // if the message fails to send, respond with 503
+        throw e;
+    });
+}
+
 function main() {
     webApp.post('/spark', (request, response) => { // when a bot receives a message, do this
 
-        if (request.body.data.personId == sparkBotID)
-        { return; } // return if it's a bot's message, to prevent an infinte loop
-
-        console.log("juan", request.body["data"]["personEmail"]); // gets curUser
-        console.log("DZ", request.body);
+        if (request.body.data.personId == sparkBotID) { return; } // return if it's a bot's message, to prevent an infinte loop
 
         sparkBot.messages.get(request.body.data.id).then((r) => {
-          console.log("HMMMM", r.personId); // gets the ID of current person
-          var currUserId = r.personId;
+            var currUserId = r.personId;
 
-          // this is how u make a GET request passing in some hardcoded authorization
-          var displayName;
-          var http = require("https");
-          // *** Bearer should not be explicit!!! *** IT IS THE ACCESS TOKEN
-          var options = {
-            "method": "GET",
-            "hostname": "api.ciscospark.com", 
-            "port": null, "path": "/v1/people/" + currUserId, 
-            "headers": {
-            "authorization": "Bearer MDBiOWQ1ODMtNzQ1YS00MzFlLTllNWEtMTA2MWY5NmU4ZjExZThmNDIxMGEtMjZh", 
-            "cache-control": "no-cache", "postman-token": "a88bb604-cf15-f9a5-f4e2-03a24a5a9083" },
-          };
-          // needa use this GET request to get the user email
-          var req = http.request(options, function (res) {
-            var chunks = []; res.on("data", function (chunk) {
-              chunks.push(chunk); 
-            });
-            res.on("end", function () {
-              var body = Buffer.concat(chunks); 
-              displayName = JSON.parse(body.toString())["displayName"].split(" ")[0];
-              console.log("CURR DISPLAY NAME", displayName);
+            // this is how u make a GET request passing in some hardcoded authorization
+            var displayName;
+            var http = require("https");
+            // *** Bearer should not be explicit!!! *** IT IS THE ACCESS TOKEN
+            var options = {
+                "method": "GET",
+                "hostname": "api.ciscospark.com",
+                "port": null, "path": "/v1/people/" + currUserId,
+                "headers": {
+                    "authorization": "Bearer MDBiOWQ1ODMtNzQ1YS00MzFlLTllNWEtMTA2MWY5NmU4ZjExZThmNDIxMGEtMjZh",
+                    "cache-control": "no-cache", "postman-token": "a88bb604-cf15-f9a5-f4e2-03a24a5a9083"
+                },
+            };
+            // needa use this GET request to get the user email
+            var req = http.request(options, function (res) {
+                var chunks = []; res.on("data", function (chunk) {
+                    chunks.push(chunk);
+                });
+                res.on("end", function () {
+                    var body = Buffer.concat(chunks);
+                    displayName = JSON.parse(body.toString())["displayName"].split(" ")[0];
 
-              // do the DB stuff here
-              var db = firebase.database();
-              // this line will update displayName's (currentUser) Monday: UPDATED
-              db.ref('/Employees/' + displayName).update({ Monday: "ASDASLKDJ", Friday: "7:00-8:00" });
-            console.log("UPDATED DB!!");
+                    // do the DB stuff here
+                    var db = firebase.database();
+                    // this line will update displayName's (currentUser) Monday: UPDATED
+                    db.ref('/Employees/' + displayName).update({ Monday: "ASDASLKDJ", Friday: "7:00-8:00" });
+                    console.log("UPDATED DB!!");
+                });
             });
-          });
-          req.end();
+            req.end();
         });
-        
+
 
         // We will echo the message sent back for this demo:
         sparkBot.messages.get(request.body.data.id).then((r) => { // get the message details to echo back
             var comment = r.text;
-            var post = {"roomId": r.roomId};
+            var post = { "roomId": r.roomId };
             console.log(post);
             console.log("reaches before comment decisions")
-            if (comment.indexOf("-schedule") !== -1){
-                post["markdown"] = "get users schedule";
+            if (comment.indexOf("-schedule") !== -1) {
+                var res = getSchedule(0, null, function (err, res) {
+                    post["markdown"] = res;
+                    forward(post, response);
+                });
             }
-            else if (comment.indexOf("schedule" !== -1)) {
-                post["markdown"] = "get my schedule";
+            else if (comment.indexOf("schedule") !== -1) {
+                post["markdown"] = `Getting ${r.text}'s Schedule`;
             }
             else if (comment.indexOf("-away") !== -1) {
                 post["markdown"] = "mark me away";
@@ -149,14 +161,9 @@ function main() {
             else if (comment.indexOf("-take") !== -1) {
                 post["markdown"] = "take this shift";
             }
-
-            // send the message back
-            sparkBot.messages.create( post ).then((r) => {
-                response.sendStatus(200); // respond with 200 to api.ciscospark.com
-            }).catch((e) => {
-                response.sendStatus(503); // if the message fails to send, respond with 503
-                throw e;
-            });
+            else {
+                post["markdown"] = "INVALID COMMAND";
+            }
         }).catch((e) => {
             response.sendStatus(503); // if getting message details fails, respond with 503
             throw e;
@@ -192,28 +199,28 @@ process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
 
 
 
-function parseSchedule(json, status, name=null){
+function parseSchedule(json, status, name = null) {
     var returnText = '';
-    if (status == 0 && json != null){
+    if (status == 0 && json != null) {
         for (var emname in json) {
             returnText += ('\n \n' + emname + '\n');
-            for (var day in json[emname]){
+            for (var day in json[emname]) {
                 returnText += ('\n' + day + ' : ' + json[emname][day]);
             }
         }
     } else if (status == 1 && json != null) {
         returnText += '\n' + name + '\n';
-        for (var day in json[name]){
+        for (var day in json[name]) {
             returnText += '\n' + day + ' : ' + json[name][day];
         }
-    } else if (status == 2){
+    } else if (status == 2) {
         returnText = 'Ok, removing shift!';
-    } else if (status == 3){
+    } else if (status == 3) {
         returnText = 'Ok, adding shift!';
     } else {
         returnText = 'Something went wrong!';
     }
-    console.log(returnText);
+    return returnText;
 }
 
 
