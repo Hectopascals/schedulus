@@ -78,7 +78,7 @@ function setFullWeek(name, callback) {
 
 function setNewWeek(callback) {
     // deletes previous weeks employee schedules
-    firebase.database().ref('/Employees/').update({ }, function (err, res) {
+    firebase.database().ref('/Employees/').update({}, function (err, res) {
         if (err) {
             console.error("failed to delete previous schedule");
         }
@@ -185,6 +185,12 @@ function main() {
         // We will echo the message sent back for this demo:
         sparkBot.messages.get(request.body.data.id).then((r) => { // get the message details to echo back
             var comment = r.text;
+
+            if (comment[0] === " ") {
+                comment = comment.substring(1);
+            }
+
+            console.log("original comment = " + comment);
             var post = { "roomId": r.roomId };
             console.log(post);
             console.log("reaches before comment decisions")
@@ -216,13 +222,15 @@ function main() {
                 var end_time = data[4];
 
                 setSchedule(fstName, day, "OFF", function (err, res) {
-                    post["markdown"] = "mark me away";
+                    post["markdown"] = 'Ok, removing shift for ' + fstName + ' on ' + day;
                     forward(post, response);
                 });
             }
             else if (comment.indexOf("-take") !== -1) {
+                console.log("comment = " + comment);
                 var data = comment.replace(/-/g, " ");
                 data = data.split(' ')
+                console.log(data);
 
                 var fstName = capitalizeFirstLetter(data[1]);
                 var day = capitalizeFirstLetter(data[2]);
@@ -233,7 +241,7 @@ function main() {
                 var time = start_time + "-" + end_time;
 
                 setSchedule(fstName, day, time, function (err, res) {
-                    post["markdown"] = "take this shift";
+                    post["markdown"] = 'Ok, adding ' + time + ' shift on ' + day + ' for ' + fstName;
                     forward(post, response);
                 });
             }
@@ -254,7 +262,7 @@ function main() {
                 });
             }
             else if (comment.indexOf("info") !== -1 || comment.indexOf("hi") !== -1 || comment.indexOf("hello") !== -1) {
-                post["markdown"] = "Hi there! Type: \n * '@Schedulus -schedule' For the all employee schedule \n * '@Schedulus Firstname-schedule' For your own schedule \n * '@Schedulus Firstname-Weekday-away' To drop your shift on that day \n * '@Schedulus Firstname-Weekday-(hh:mm-hh:mm)-take' To take that shift";
+                post["markdown"] = "Hi there! Type: \n * '@Schedulus schedule' For the all employees schedule \n * '@Schedulus Firstname-schedule' For your own schedule \n * '@Schedulus Firstname-Weekday-away' To drop your shift on that day \n * '@Schedulus Firstname-Weekday-(hh:mm-hh:mm)-take' To take that shift \n * '@Schedulus Firstname-add' To add a new employee \n * '@Schedulus -fullweek' to set all employee hours from 9:00-5:00";
                 forward(post, response);
             }
             else if (comment.indexOf("-add") !== -1) {
@@ -263,7 +271,6 @@ function main() {
 
                 var fstName = capitalizeFirstLetter(data[1]);
 
-                console.log("FSTNAME " + fstName);
                 addEmployee(fstName, function (err, res) {
                     post["markdown"] = "Added " + fstName + " to the Employee list";
                     forward(post, response);
@@ -317,24 +324,27 @@ function getKeys(json) {
 function parseSchedule(json, status, name = null) {
     var returnText = '';
     if (status == 0 && json != null) {
+        var num = 1;
         for (var emname in json) {
             var days = getKeys(json[emname]);
             var dayLen = days.length;
-            returnText += ('\n \n' + emname + '\n');
+            returnText += (`\n \n ${ num }.`+ emname + '\n');
             for (var i = 0; i < dayLen; i++) {
-                returnText += ('\n' + days[i] + ' : ' + json[emname][days[i]]);
+                returnText += ('\n \t' + days[i] + ' : ' + json[emname][days[i]]);
             }
+            num++;
         }
     } else if (status == 1 && json != null) {
         var days = getKeys(json[name]);
         var dayLen = days.length;
         returnText += '\n' + name + '\n';
         for (var i = 0; i < dayLen; i++) {
-            returnText += ('\n' + days[i] + ' : ' + json[name][days[i]]);
+            returnText += ('\n * ' + days[i] + ' : ' + json[name][days[i]]);
         }
     } else {
         returnText = 'Something went wrong!';
     }
+    console.log("returnText contains = " + returnText);
     return returnText;
 }
 
