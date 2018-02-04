@@ -2,7 +2,7 @@
 const firebase = require('firebase');
 const sparkCreds = require('./ciscosparkSecret');
 const firebaseCreds = require('./firebaseSecret');
-const serverCreds = require('./serverSecret')
+const serverCreds = require('./serverSecret');
 
 'use strict';
 
@@ -19,8 +19,8 @@ const SPARK = require('ciscospark'); // the nodejs cisco spark sdk
 // initialize a firebase instance
 
 console.log(BOTTOKEN);
-console.log(SERVER)
-console.log(FIREKEY)
+console.log(SERVER);
+console.log(FIREKEY);
 
 firebase.initializeApp({
     appName: "schedulus-ayy",
@@ -188,16 +188,16 @@ process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
 function parseSchedule(json, status, name=null){
     var returnText = '';
     if (status == 0 && json != null){
-        for (var emname in json.Employees) {
+        for (var emname in json) {
             returnText += ('\n \n' + emname + '\n');
-            for (var day in json.Employees[emname]){
-                returnText += ('\n' + day + ' : ' + json.Employees[emname][day]);
+            for (var day in json[emname]){
+                returnText += ('\n' + day + ' : ' + json[emname][day]);
             }
         }
     } else if (status == 1 && json != null) {
         returnText += '\n' + name + '\n';
-        for (var day in json.Employees[name]){
-            returnText += '\n' + day + ' : ' + json.Employees[name][day];
+        for (var day in json[name]){
+            returnText += '\n' + day + ' : ' + json[name][day];
         }
     } else if (status == 2){
         returnText = 'Ok, removing shift!';
@@ -206,9 +206,7 @@ function parseSchedule(json, status, name=null){
     } else {
         returnText = 'Something went wrong!';
     }
-
     console.log(returnText);
-
 }
 
 
