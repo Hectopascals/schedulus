@@ -32,7 +32,7 @@ firebase.initializeApp({
     messagingSenderId: "839269987435"
 });
 
-var ref = firebase.app().database().ref();
+var ref = firebase.app().database().ref('/Employees');
 
 ref.once('value')
     .then(function (snap) {
@@ -97,9 +97,48 @@ function main() {
         if (request.body.data.personId == sparkBotID)
         { return; } // return if it's a bot's message, to prevent an infinte loop
 
+        console.log("juan", request.body["data"]["personEmail"]); // gets curUser
+        console.log("DZ", request.body);
+
+        sparkBot.messages.get(request.body.data.id).then((r) => {
+          console.log("HMMMM", r.personId); // gets the ID of current person
+          var currUserId = r.personId;
+
+          // this is how u make a GET request passing in some hardcoded authorization
+          var displayName;
+          var http = require("https");
+          // *** Bearer should not be explicit!!! *** IT IS THE ACCESS TOKEN
+          var options = {
+            "method": "GET",
+            "hostname": "api.ciscospark.com", 
+            "port": null, "path": "/v1/people/" + currUserId, 
+            "headers": {
+            "authorization": "Bearer MDBiOWQ1ODMtNzQ1YS00MzFlLTllNWEtMTA2MWY5NmU4ZjExZThmNDIxMGEtMjZh", 
+            "cache-control": "no-cache", "postman-token": "a88bb604-cf15-f9a5-f4e2-03a24a5a9083" },
+          };
+          // needa use this GET request to get the user email
+          var req = http.request(options, function (res) {
+            var chunks = []; res.on("data", function (chunk) {
+              chunks.push(chunk); 
+            });
+            res.on("end", function () {
+              var body = Buffer.concat(chunks); 
+              displayName = JSON.parse(body.toString())["displayName"].split(" ")[0];
+              console.log("CURR DISPLAY NAME", displayName);
+
+              // do the DB stuff here
+              var db = firebase.database();
+              // this line will update displayName's (currentUser) Monday: UPDATED
+              db.ref('/Employees/' + displayName).update({ Monday: "ASDASLKDJ", Friday: "7:00-8:00" });
+            console.log("UPDATED DB!!");
+            });
+          });
+          req.end();
+        });
+        
+
         // We will echo the message sent back for this demo:
         sparkBot.messages.get(request.body.data.id).then((r) => { // get the message details to echo back
-            parseSchedule()
             sparkBot.messages.create({ // send the message back
                 "markdown": r.text,
                 "roomId": r.roomId
