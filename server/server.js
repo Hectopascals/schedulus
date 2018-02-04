@@ -18,10 +18,6 @@ const SPARK = require('ciscospark'); // the nodejs cisco spark sdk
 
 // initialize a firebase instance
 
-console.log(BOTTOKEN);
-console.log(SERVER);
-console.log(FIREKEY);
-
 firebase.initializeApp({
     appName: "schedulus-ayy",
     apiKey: FIREKEY,
@@ -71,7 +67,6 @@ function initBot() {
         }).then((r) => {
             sparkBotWH = r.id;
             sparkBot.people.get('me').then((r) => {
-                console.log('test', r);
                 sparkBotID = r.id;
                 main();
                 resolve(r); // resolves
@@ -92,7 +87,6 @@ function stopBot() {
 
 function main() {
     webApp.post('/spark', (request, response) => { // when a bot receives a message, do this
-        console.log(request.body);
 
         if (request.body.data.personId == sparkBotID)
         { return; } // return if it's a bot's message, to prevent an infinte loop
@@ -139,20 +133,33 @@ function main() {
 
         // We will echo the message sent back for this demo:
         sparkBot.messages.get(request.body.data.id).then((r) => { // get the message details to echo back
-            sparkBot.messages.create({ // send the message back
-                "markdown": r.text,
-                "roomId": r.roomId
-            }).then((r) => {
+            var comment = r.text;
+            var post = {"roomId": r.roomId};
+            console.log(post);
+            console.log("reaches before comment decisions")
+            if (comment.indexOf("-schedule") !== -1){
+                post["markdown"] = "get users schedule";
+            }
+            else if (comment.indexOf("schedule" !== -1)) {
+                post["markdown"] = "get my schedule";
+            }
+            else if (comment.indexOf("-away") !== -1) {
+                post["markdown"] = "mark me away";
+            }
+            else if (comment.indexOf("-take") !== -1) {
+                post["markdown"] = "take this shift";
+            }
+
+            // send the message back
+            sparkBot.messages.create( post ).then((r) => {
                 response.sendStatus(200); // respond with 200 to api.ciscospark.com
             }).catch((e) => {
                 response.sendStatus(503); // if the message fails to send, respond with 503
                 throw e;
-                console.log("???" ,e);
             });
         }).catch((e) => {
             response.sendStatus(503); // if getting message details fails, respond with 503
             throw e;
-            console.log("???" ,e);
         });
     });
 }
