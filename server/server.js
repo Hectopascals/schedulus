@@ -36,7 +36,7 @@ var ref = firebase.app().database().ref();
 
 ref.once('value')
     .then(function (snap) {
-        console.log('snap.val() ', snap.val());
+        parseSchedule(snap.val(), 0, 'Jane');
     })
     .catch((error) => {
       console.log(".ONCE FAILED:", error);
@@ -92,15 +92,14 @@ function stopBot() {
 
 function main() {
     webApp.post('/spark', (request, response) => { // when a bot receives a message, do this
-
         console.log(request.body);
 
         if (request.body.data.personId == sparkBotID)
         { return; } // return if it's a bot's message, to prevent an infinte loop
 
         // We will echo the message sent back for this demo:
-
         sparkBot.messages.get(request.body.data.id).then((r) => { // get the message details to echo back
+            parseSchedule()
             sparkBot.messages.create({ // send the message back
                 "markdown": r.text,
                 "roomId": r.roomId
@@ -116,8 +115,6 @@ function main() {
             throw e;
             console.log("???" ,e);
         });
-
-
     });
 }
 
@@ -146,6 +143,37 @@ process.on('SIGUSR2', exitHandler.bind(null, { exit: true }));
 process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
 
 // exit handler -- end
+
+
+
+function parseSchedule(json, status, name=null){
+    var returnText = '';
+    if (status == 0 && json != null){
+        for (var emname in json.Employees) {
+            returnText += ('\n \n' + emname + '\n');
+            for (var day in json.Employees[emname]){
+                returnText += ('\n' + day + ' : ' + json.Employees[emname][day]);
+            }
+        }
+    } else if (status == 1 && json != null) {
+        returnText += '\n' + name + '\n';
+        for (var day in json.Employees[name]){
+            returnText += '\n' + day + ' : ' + json.Employees[name][day];
+        }
+    } else if (status == 2){
+        returnText = 'Ok, removing shift!';
+    } else if (status == 3){
+        returnText = 'Ok, adding shift!';
+    } else {
+        returnText = 'Something went wrong!';
+    }
+
+    console.log(returnText);
+
+}
+
+
+
 
 
 webApp.listen(8080);
