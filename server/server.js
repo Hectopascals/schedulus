@@ -37,7 +37,10 @@ var ref = firebase.app().database().ref();
 ref.once('value')
     .then(function (snap) {
         console.log('snap.val() ', snap.val());
-    });
+    })
+    .catch(error) => {
+      console.log(".ONCE FAILED:", error);
+    };
 
 
 // initialize application -- begin
@@ -54,6 +57,7 @@ sparkBot.once('ready', () => { // handle on bot ready
         main();
     }).catch((e) => {
         throw e; // throw an error if it doesn't succeed
+        console.log("APP WASNT RDY ", e);
     });
 });
 
@@ -105,10 +109,12 @@ function main() {
             }).catch((e) => {
                 response.sendStatus(503); // if the message fails to send, respond with 503
                 throw e;
+                console.log("???" ,e);
             });
         }).catch((e) => {
             response.sendStatus(503); // if getting message details fails, respond with 503
             throw e;
+            console.log("???" ,e);
         });
 
 
