@@ -9,6 +9,6 @@ See Full Schedule: @Schedulus schedule
 
 See Personal Schedule: @Schedulus Firstname-schedule
 
-Call in Sick/Cancel Shift: @Schedulus Firstname-Weekday-Hours(e.g. 10:30-15:30)-away
+Call in Sick/Cancel Shift: @Schedulus Firstname-Day-Hours(e.g. 10:30-15:30)-away
 
-Take Shift: @Schedulus Firstname-Weekday-Hours(e.g. 10:30-15:30)-take
+Take Shift: @Schedulus Firstname-Day-Hours(e.g. 10:30-15:30)-take

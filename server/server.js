@@ -43,6 +43,21 @@ function getSchedule(i, name, callback) {
 }
 
 
+function setSchedule(name, day, time, callback) {
+    // update schedule for prompted user
+    console.log("name = " + name);
+    console.log("day, time" + day + time);
+    firebase.database().ref('/Employees/' + name).update({ [day]: time }, function (err, res) {
+        if (err) {
+            console.error("failed to update schedule");
+        }
+        else {
+            callback(null, res);
+        }
+    })
+}
+
+
 // initialize application -- begin
 let webApp = EXPRESS(); // construct the web webserver
 webApp.use(BODYPARSER.json()); // instruct the web app to read json through the helper library, "body-parser"
@@ -99,46 +114,22 @@ function forward(post, response) {
     });
 }
 
+function extractFstName(comment) {
+    // hacky way of getting firstname
+    var fstName = comment.replace('-', ' ');
+    fstName = fstName.split(' ')[1];
+    return fstName;
+}
+
+function capitalizeFirstLetter(string) {
+    console.log("STRING = "+ string);
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 function main() {
     webApp.post('/spark', (request, response) => { // when a bot receives a message, do this
 
         if (request.body.data.personId == sparkBotID) { return; } // return if it's a bot's message, to prevent an infinte loop
-
-        sparkBot.messages.get(request.body.data.id).then((r) => {
-            var currUserId = r.personId;
-
-            // this is how u make a GET request passing in some hardcoded authorization
-            var displayName;
-            var http = require("https");
-            // *** Bearer should not be explicit!!! *** IT IS THE ACCESS TOKEN
-            var options = {
-                "method": "GET",
-                "hostname": "api.ciscospark.com",
-                "port": null, "path": "/v1/people/" + currUserId,
-                "headers": {
-                    "authorization": "Bearer MDBiOWQ1ODMtNzQ1YS00MzFlLTllNWEtMTA2MWY5NmU4ZjExZThmNDIxMGEtMjZh",
-                    "cache-control": "no-cache", "postman-token": "a88bb604-cf15-f9a5-f4e2-03a24a5a9083"
-                },
-            };
-            // needa use this GET request to get the user email
-            var req = http.request(options, function (res) {
-                var chunks = []; res.on("data", function (chunk) {
-                    chunks.push(chunk);
-                });
-                res.on("end", function () {
-                    var body = Buffer.concat(chunks);
-                    displayName = JSON.parse(body.toString())["displayName"].split(" ")[0];
-
-                    // do the DB stuff here
-                    var db = firebase.database();
-                    // this line will update displayName's (currentUser) Monday: UPDATED
-                    db.ref('/Employees/' + displayName).update({ Monday: "ASDASLKDJ", Friday: "7:00-8:00" });
-                    console.log("UPDATED DB!!");
-                });
-            });
-            req.end();
-        });
-
 
         // We will echo the message sent back for this demo:
         sparkBot.messages.get(request.body.data.id).then((r) => { // get the message details to echo back
@@ -150,12 +141,7 @@ function main() {
             // BEWARE @schedulus -schedule is the first if although its the second command in README
 
             if (comment.indexOf("-schedule") !== -1) {
-                
-                // hacky way of getting firstname
-                var fstName = comment.replace('-', ' ');
-                console.log("FSTNAME IS = " + fstName);
-                fstName = fstName.split(' ')[1]; 
-
+                var fstName = extractFstName(comment);
                 var res = getSchedule(1, fstName, function (err, res) {
                     post["markdown"] = res;
                     forward(post, response);
@@ -168,10 +154,39 @@ function main() {
                 })
             }
             else if (comment.indexOf("-away") !== -1) {
-                post["markdown"] = "mark me away";
+
+                var data = comment.replace(/-/g, " ");
+                data = data.split(' ')
+
+                var fstName = capitalizeFirstLetter(data[1]);
+                var day = capitalizeFirstLetter(data[2]);
+
+                var start_time = data[3];
+                var end_time = data[4];
+
+                var res = setSchedule(fstName, day, "OFF", function (err, res) {
+                    post["markdown"] = "mark me away";
+                    forward(post, response);
+                });
             }
             else if (comment.indexOf("-take") !== -1) {
-                post["markdown"] = "take this shift";
+                var data = comment.replace(/-/g, " ");
+                data = data.split(' ')
+                
+                console.log("comment = " + data);
+                var fstName = capitalizeFirstLetter(data[1]);
+                console.log("fstName = " + fstName);
+                var day = capitalizeFirstLetter(data[2]);
+
+                var start_time = data[3];
+                var end_time = data[4];
+
+                var time = start_time + "-" + end_time;
+                
+                var res = setSchedule(fstName, day, time, function (err, res) {
+                    post["markdown"] = "take this shift";
+                    forward(post, response);
+                });
             }
             else {
                 post["markdown"] = "INVALID COMMAND";
@@ -216,19 +231,15 @@ function parseSchedule(json, status, name = null) {
     if (status == 0 && json != null) {
         for (var emname in json) {
             returnText += ('\n \n' + emname + '\n');
-            for (var i=0; i<dayLen; i++) {
+            for (var i = 0; i < dayLen; i++) {
                 returnText += ('\n' + days[i] + ' : ' + json[emname][days[i]]);
             }
         }
     } else if (status == 1 && json != null) {
         returnText += '\n' + name + '\n';
-        for (var i=0; i<dayLen; i++) {
+        for (var i = 0; i < dayLen; i++) {
             returnText += ('\n' + days[i] + ' : ' + json[name][days[i]]);
         }
-    } else if (status == 2) {
-        returnText = 'Ok, removing shift!';
-    } else if (status == 3) {
-        returnText = 'Ok, adding shift!';
     } else {
         returnText = 'Something went wrong!';
     }
