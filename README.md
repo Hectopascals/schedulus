@@ -12,3 +12,9 @@ See Personal Schedule: @Schedulus Firstname-schedule
 Call in Sick/Cancel Shift: @Schedulus Firstname-Day-Hours(e.g. 10:30-15:30)-away
 
 Take Shift: @Schedulus Firstname-Day-Hours(e.g. 10:30-15:30)-take
+
+Load a full week of work: @Schedulus Firstname-fullweek
+
+Delete Last Weeks Schedule: @Schedulus schedule-newweek
+
+View List of Commands: @Schedulus -info

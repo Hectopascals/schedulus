@@ -45,8 +45,6 @@ function getSchedule(i, name, callback) {
 
 function setSchedule(name, day, time, callback) {
     // update schedule for prompted user
-    console.log("name = " + name);
-    console.log("day, time" + day + time);
     firebase.database().ref('/Employees/' + name).update({ [day]: time }, function (err, res) {
         if (err) {
             console.error("failed to update schedule");
@@ -142,13 +140,13 @@ function main() {
 
             if (comment.indexOf("-schedule") !== -1) {
                 var fstName = extractFstName(comment);
-                var res = getSchedule(1, fstName, function (err, res) {
+                    getSchedule(1, fstName, function (err, res) {
                     post["markdown"] = res;
                     forward(post, response);
                 });
             }
             else if (comment.indexOf("schedule") !== -1) {
-                var res = getSchedule(0, null, function (err, res) {
+                getSchedule(0, null, function (err, res) {
                     post["markdown"] = res;
                     forward(post, response);
                 })
@@ -164,7 +162,7 @@ function main() {
                 var start_time = data[3];
                 var end_time = data[4];
 
-                var res = setSchedule(fstName, day, "OFF", function (err, res) {
+                setSchedule(fstName, day, "OFF", function (err, res) {
                     post["markdown"] = "mark me away";
                     forward(post, response);
                 });
@@ -173,9 +171,7 @@ function main() {
                 var data = comment.replace(/-/g, " ");
                 data = data.split(' ')
                 
-                console.log("comment = " + data);
                 var fstName = capitalizeFirstLetter(data[1]);
-                console.log("fstName = " + fstName);
                 var day = capitalizeFirstLetter(data[2]);
 
                 var start_time = data[3];
@@ -183,10 +179,29 @@ function main() {
 
                 var time = start_time + "-" + end_time;
                 
-                var res = setSchedule(fstName, day, time, function (err, res) {
+                setSchedule(fstName, day, time, function (err, res) {
                     post["markdown"] = "take this shift";
                     forward(post, response);
                 });
+            }
+            else if (comment.indexOf("-fullweek") !== -1) {
+                var data = comment.replace(/-/g, " ");
+                data = data.split(' ');
+
+                var fstName = capitalizeFirstLetter(data[1]);
+                setFullWeek(fstName, function (err, res) {
+                    post["markdown"] = res;
+                    forward(post, response);
+                });
+            }
+            else if (comment.indexOf("-newweek") !== -1) {
+                setNewWeek(function (err, res) {
+                    post["markdown"] = "New Week New Me!"
+                    forward(post, response);
+                });
+            }
+            else if (comment.indexOf("-info") !== -1) {
+
             }
             else {
                 post["markdown"] = "INVALID COMMAND";
@@ -224,18 +239,28 @@ process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
 
 // exit handler -- end
 
+function getKeys (json) {
+    var keys = []
+    for (k in json) {
+        keys.push(k);
+    }
+    return keys
+}
+
 function parseSchedule(json, status, name = null) {
     var returnText = '';
-    var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    var dayLen = 7;
     if (status == 0 && json != null) {
         for (var emname in json) {
+            var days = getKeys(json[emname]);
+            var dayLen = days.length;
             returnText += ('\n \n' + emname + '\n');
             for (var i = 0; i < dayLen; i++) {
                 returnText += ('\n' + days[i] + ' : ' + json[emname][days[i]]);
             }
         }
     } else if (status == 1 && json != null) {
+        var days = getKeys(json[name]);
+        var dayLen = days.length;
         returnText += '\n' + name + '\n';
         for (var i = 0; i < dayLen; i++) {
             returnText += ('\n' + days[i] + ' : ' + json[name][days[i]]);
