@@ -209,24 +209,22 @@ process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
 
 // exit handler -- end
 
-
-
 function parseSchedule(json, status, name = null) {
     var returnText = '';
+    var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    var dayLen = 7;
     if (status == 0 && json != null) {
         for (var emname in json) {
             returnText += ('\n \n' + emname + '\n');
-            for (var day in json[emname]) {
-                returnText += ('\n' + day + ' : ' + json[emname][day]);
+            for (var i=0; i<dayLen; i++) {
+                returnText += ('\n' + days[i] + ' : ' + json[emname][days[i]]);
             }
         }
     } else if (status == 1 && json != null) {
         returnText += '\n' + name + '\n';
-        console.log("name = " + name);
-        for (var day in json[name]) {
-            returnText += '\n' + day + ' : ' + json[name][day];
+        for (var i=0; i<dayLen; i++) {
+            returnText += ('\n' + days[i] + ' : ' + json[name][days[i]]);
         }
-        console.log("returnText = " + returnText);
     } else if (status == 2) {
         returnText = 'Ok, removing shift!';
     } else if (status == 3) {
