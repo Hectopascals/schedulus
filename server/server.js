@@ -146,14 +146,26 @@ function main() {
             var post = { "roomId": r.roomId };
             console.log(post);
             console.log("reaches before comment decisions")
+
+            // BEWARE @schedulus -schedule is the first if although its the second command in README
+
             if (comment.indexOf("-schedule") !== -1) {
-                var res = getSchedule(0, null, function (err, res) {
+                
+                // hacky way of getting firstname
+                var fstName = comment.replace('-', ' ');
+                console.log("FSTNAME IS = " + fstName);
+                fstName = fstName.split(' ')[1]; 
+
+                var res = getSchedule(1, fstName, function (err, res) {
                     post["markdown"] = res;
                     forward(post, response);
                 });
             }
             else if (comment.indexOf("schedule") !== -1) {
-                post["markdown"] = `Getting ${r.text}'s Schedule`;
+                var res = getSchedule(0, null, function (err, res) {
+                    post["markdown"] = res;
+                    forward(post, response);
+                })
             }
             else if (comment.indexOf("-away") !== -1) {
                 post["markdown"] = "mark me away";
@@ -210,9 +222,11 @@ function parseSchedule(json, status, name = null) {
         }
     } else if (status == 1 && json != null) {
         returnText += '\n' + name + '\n';
+        console.log("name = " + name);
         for (var day in json[name]) {
             returnText += '\n' + day + ' : ' + json[name][day];
         }
+        console.log("returnText = " + returnText);
     } else if (status == 2) {
         returnText = 'Ok, removing shift!';
     } else if (status == 3) {
@@ -222,9 +236,6 @@ function parseSchedule(json, status, name = null) {
     }
     return returnText;
 }
-
-
-
 
 
 webApp.listen(8080);
