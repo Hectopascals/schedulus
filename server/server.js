@@ -1,13 +1,15 @@
 // Stores Organizations schedule data in firebase database
 const firebase = require('firebase');
 const sparkCreds = require('./ciscosparkSecret');
-const firebaseCreds = require('./firebaseSecret')
+const firebaseCreds = require('./firebaseSecret');
+const serverCreds = require('./serverSecret')
 
 'use strict';
 
 // set data here, could use environmental variables to simplify this step -- begin
 const BOTTOKEN = sparkCreds.clientId; // set the bots auth token to constant
-const SERVER = 'https://02c74ea3.ngrok.io'; // the url to your webhook receiving server
+const SERVER = serverCreds.clientId; // the url to your webhook receiving server
+const FIREKEY = firebaseCreds.clientId;
 // set data here, could use environmental variables to simplify this step -- end
 
 const EXPRESS = require('express'); // used as the webserver
@@ -16,9 +18,13 @@ const SPARK = require('ciscospark'); // the nodejs cisco spark sdk
 
 // initialize a firebase instance
 
+console.log(BOTTOKEN);
+console.log(SERVER)
+console.log(FIREKEY)
+
 firebase.initializeApp({
     appName: "schedulus-ayy",
-    apiKey: firebaseCreds.clientId,
+    apiKey: FIREKEY,
     authDomain: "schedulus-ayy.firebaseapp.com",
     databaseURL: "https://schedulus-ayy.firebaseio.com",
     projectId: "schedulus-ayy",
