@@ -2,7 +2,7 @@
 
 # Schedulus
 
-Schedulus is a timetable management chatbot build on the Cisco Spark platform (Workspace messenger), helping organizations have full control over managing employee schedules.
+Schedulus is a timetable management chatbot built on the Cisco Spark platform (Workspace messenger), helping organizations have full control over managing employee schedules.
 
 This App is built using Cisco Spark's API, NodeJS, Express, and Firebase.
 
@@ -20,9 +20,9 @@ This App is built using Cisco Spark's API, NodeJS, Express, and Firebase.
 
 ### Node.js Server
 
-1. `cd` into server directory and run `npm install`
-2. Create a ciscosparkSecret.js, firebaseSecret.js, and serverSecret.js files with working credentials.
-5. Start the server with `npm start`
+1. `cd` into `server` directory and run `npm install`
+2. Create ciscosparkSecret.js, firebaseSecret.js, and serverSecret.js files in `server` with working credentials.
+3. Start the server with `npm start`
 
 
 ## Devpost Submission
