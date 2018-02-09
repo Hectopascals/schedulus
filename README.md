@@ -61,3 +61,6 @@ How to use Cisco Spark's API and how to build a Cisco Spark chatbot, how schedul
 * Push Notifications for adding/dropping shifts
 * Converting the current schedule output into a fancier table, improving the UI
 * Tracking the amount of hours worked for each week and adding limitations/rules (i.e. part-time workers shouldn't be able to add more shifts than they're allowed to work for)
+
+
+Created by: Henry, Hirthanan and Zi
